@@ -45,28 +45,3 @@ Clone the sc2-pathlib repository and run `cargo build --release` in the sc2-path
 Alternatively, you can run `build.bat` which automates the process above for Windows.
 
 Copy `sc2pathlib.so`/`sc2pathlib.pyd` to the directory where your Python program resides to be able to import it as a Python library.
-
-#### Example
-```
->>> import sc2pathlib
->>> sc2pathlib.find_path([[1,1,1,1],[0,0,0,1],[1,1,0,1],[1,1,1,1]], (0, 0), (2, 0))
-
-([(0, 0), (0, 1), (0, 2), (0, 3), (1, 3), (2, 3), (3, 3), (3, 2), (3, 1), (2, 0)], 94142)
->>>
-```
-## Functions
-
-### find_path
-Uses A* pathfinding algorithm and returns a tuple containing the path as an array of tuples and the distance x 10000.
-#### Parameters
-`grid`: A two-dimensional array using 1 for pathable and 0 for obstacles. 
-Example:
-`[[1,1,1,1],[0,0,0,1],[1,1,0,1],[1,1,1,1]]`
-
-`start`: Tuple with the x and y value of the start position.
-`end`: Tuple with the x and y value of the end position.
-
-### debug_path
-Same function as above but returns a string containing the length of the array of tuples, the distance x 10000, the start position and the goal position.
-#### Parameters
-The same as `find_path`.
