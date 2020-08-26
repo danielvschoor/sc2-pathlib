@@ -1,4 +1,5 @@
 use pathfinding::prelude::absdiff;
+use ndarray::{Array2, Axis};
 
 //static SQRT2: f32 = 1.4142135623730950488016887242097;
 pub static SQRT2: usize = 14142;
@@ -37,7 +38,7 @@ impl Pos {
         }
     }
 
-    pub fn successors(&self, grid: &[Vec<usize>]) -> Vec<(Pos, usize)> {
+    pub fn successors(&self, grid: &Array2<usize>) -> Vec<(Pos, usize)> {
         let &Pos(x, y) = self;
         let mut arr = Vec::<(Pos, usize)>::with_capacity(8);
         //let arr = Vec<(Pos, f32)>();
@@ -48,26 +49,26 @@ impl Pos {
         let mut val_up: bool = false;
 
         if x > 0 {
-            val_left = grid[x - 1][y] > 0;
+            val_left = grid[(x - 1,y)] > 0;
         }
 
         if y > 0 {
-            val_down = grid[x][y - 1] > 0;
+            val_down = grid[(x,y - 1)] > 0;
         }
 
-        if x + 1 < grid.len() {
-            val_right = grid[x + 1][y] > 0;
+        if x + 1 < grid.len_of(Axis(0)){
+            val_right = grid[(x + 1,y)] > 0;
         }
 
-        if y + 1 < grid[0].len() {
-            val_up = grid[x][y + 1] > 0;
+        if y + 1 < grid.len_of(Axis(1)){
+            val_up = grid[(x,y + 1)] > 0;
         }
 
         if val_left {
             arr.push((Pos(x - 1, y), MULT));
 
             if val_down {
-                let diag_val = grid[x - 1][y - 1] > 0;
+                let diag_val = grid[(x - 1,y - 1)] > 0;
 
                 if diag_val {
                     arr.push((Pos(x - 1, y - 1), SQRT2));
@@ -75,7 +76,7 @@ impl Pos {
             }
 
             if val_up {
-                let diag_val = grid[x - 1][y + 1] > 0;
+                let diag_val = grid[(x - 1,y + 1)] > 0;
 
                 if diag_val {
                     arr.push((Pos(x - 1, y + 1), SQRT2));
@@ -87,7 +88,7 @@ impl Pos {
             arr.push((Pos(x + 1, y), MULT));
 
             if val_down {
-                let diag_val = grid[x + 1][y - 1] > 0;
+                let diag_val = grid[(x + 1,y - 1)] > 0;
 
                 if diag_val {
                     arr.push((Pos(x + 1, y - 1), SQRT2));
@@ -95,7 +96,7 @@ impl Pos {
             }
 
             if val_up {
-                let diag_val = grid[x + 1][y + 1];
+                let diag_val = grid[(x + 1,y + 1)];
 
                 if diag_val > 0 {
                     arr.push((Pos(x + 1, y + 1), SQRT2));
@@ -144,7 +145,7 @@ impl InfluencedPos {
         }
     }
 
-    pub fn successors(&self, grid: &[Vec<usize>]) -> Vec<(InfluencedPos, usize)> {
+    pub fn successors(&self, grid: &Array2<usize>) -> Vec<(InfluencedPos, usize)> {
         let &InfluencedPos(x, y) = self;
         let mut arr = Vec::<(InfluencedPos, usize)>::with_capacity(8);
         //let arr = Vec<(Pos, f32)>();
@@ -155,26 +156,26 @@ impl InfluencedPos {
         let mut val_up: usize = 0;
 
         if x > 0 {
-            val_left = grid[x - 1][y];
+            val_left = grid[(x - 1,y)];
         }
 
         if y > 0 {
-            val_down = grid[x][y - 1];
+            val_down = grid[(x,y - 1)];
         }
 
-        if x + 1 < grid.len() {
-            val_right = grid[x + 1][y];
+        if x + 1 < grid.len_of(Axis(0)) {
+            val_right = grid[(x + 1,y)];
         }
 
-        if y + 1 < grid[0].len() {
-            val_up = grid[x][y + 1];
+        if y + 1 < grid.len_of(Axis(1)) {
+            val_up = grid[(x,y + 1)];
         }
 
         if val_left > 0 {
             arr.push((InfluencedPos(x - 1, y), val_left * MULT));
 
             if val_down > 0 {
-                let diag_val = grid[x - 1][y - 1];
+                let diag_val = grid[(x - 1,y - 1)];
 
                 if diag_val > 0 {
                     arr.push((InfluencedPos(x - 1, y - 1), diag_val * SQRT2));
@@ -182,7 +183,7 @@ impl InfluencedPos {
             }
 
             if val_up > 0 {
-                let diag_val = grid[x - 1][y + 1];
+                let diag_val = grid[(x - 1,y + 1)];
 
                 if diag_val > 0 {
                     arr.push((InfluencedPos(x - 1, y + 1), diag_val * SQRT2));
@@ -194,7 +195,7 @@ impl InfluencedPos {
             arr.push((InfluencedPos(x + 1, y), val_right * MULT));
 
             if val_down > 0 {
-                let diag_val = grid[x + 1][y - 1];
+                let diag_val = grid[(x + 1,y - 1)];
 
                 if diag_val > 0 {
                     arr.push((InfluencedPos(x + 1, y - 1), diag_val * SQRT2));
@@ -202,7 +203,7 @@ impl InfluencedPos {
             }
 
             if val_up > 0 {
-                let diag_val = grid[x + 1][y + 1];
+                let diag_val = grid[(x + 1,y + 1)];
 
                 if diag_val > 0 {
                     arr.push((InfluencedPos(x + 1, y + 1), diag_val * SQRT2));
@@ -251,7 +252,7 @@ impl InvertPos {
         }
     }
 
-    pub fn successors(&self, grid: &[Vec<usize>]) -> Vec<(InvertPos, usize)> {
+    pub fn successors(&self, grid: &Array2<usize>) -> Vec<(InvertPos, usize)> {
         let &InvertPos(x, y) = self;
         let mut arr = Vec::<(InvertPos, usize)>::with_capacity(8);
         //let arr = Vec<(Pos, f32)>();
@@ -262,26 +263,26 @@ impl InvertPos {
         let mut val_up: bool = false;
 
         if x > 0 {
-            val_left = grid[x - 1][y] == 0;
+            val_left = grid[(x - 1,y)] == 0;
         }
 
         if y > 0 {
-            val_down = grid[x][y - 1] == 0;
+            val_down = grid[(x,y - 1)] == 0;
         }
 
-        if x + 1 < grid.len() {
-            val_right = grid[x + 1][y] == 0;
+        if x + 1 < grid.len_of(Axis(0)) {
+            val_right = grid[(x + 1,y)] == 0;
         }
 
-        if y + 1 < grid[0].len() {
-            val_up = grid[x][y + 1] == 0;
+        if y + 1 < grid.len_of(Axis(1)) {
+            val_up = grid[(x,y + 1)] == 0;
         }
 
         if val_left {
             arr.push((InvertPos(x - 1, y), MULT));
 
             if val_down {
-                let diag_val = grid[x - 1][y - 1] == 0;
+                let diag_val = grid[(x - 1,y - 1)] == 0;
 
                 if diag_val {
                     arr.push((InvertPos(x - 1, y - 1), SQRT2));
@@ -289,7 +290,7 @@ impl InvertPos {
             }
 
             if val_up {
-                let diag_val = grid[x - 1][y + 1] == 0;
+                let diag_val = grid[(x - 1,y + 1)] == 0;
 
                 if diag_val {
                     arr.push((InvertPos(x - 1, y + 1), SQRT2));
@@ -301,7 +302,7 @@ impl InvertPos {
             arr.push((InvertPos(x + 1, y), MULT));
 
             if val_down {
-                let diag_val = grid[x + 1][y - 1] == 0;
+                let diag_val = grid[(x + 1,y - 1)] == 0;
 
                 if diag_val {
                     arr.push((InvertPos(x + 1, y - 1), SQRT2));
@@ -309,7 +310,7 @@ impl InvertPos {
             }
 
             if val_up {
-                let diag_val = grid[x + 1][y + 1];
+                let diag_val = grid[(x + 1,y + 1)];
 
                 if diag_val == 0 {
                     arr.push((InvertPos(x + 1, y + 1), SQRT2));
