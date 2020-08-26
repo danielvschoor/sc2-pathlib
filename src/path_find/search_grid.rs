@@ -1,3 +1,5 @@
+use ndarray::Array2;
+
 #[derive(Clone, Debug)]
 pub struct FreeFinder {
     closest_grid: Vec<(i64, i64)>,
@@ -9,7 +11,7 @@ impl FreeFinder {
         FreeFinder { closest_grid }
     }
 
-    pub fn find_free(&self, lookup: (usize, usize), map: &[Vec<usize>], width: usize, height: usize) -> (usize, usize) {
+    pub fn find_free(&self, lookup: (usize, usize), map: &Array2<usize>, width: usize, height: usize) -> (usize, usize) {
         let mut result = (lookup.0, lookup.1);
 
         for offset in &self.closest_grid {
@@ -18,7 +20,7 @@ impl FreeFinder {
             if adjusted.0 >= 0 && adjusted.1 >= 0 {
                 let adjusted_usize = (adjusted.0 as usize, adjusted.1 as usize);
 
-                if adjusted_usize.0 < width && adjusted_usize.1 < height && map[adjusted_usize.0][adjusted_usize.1] > 0
+                if adjusted_usize.0 < width && adjusted_usize.1 < height && map[adjusted_usize] > 0
                 {
                     result = adjusted_usize;
                     break;
@@ -29,7 +31,13 @@ impl FreeFinder {
         result
     }
 }
-
+impl Default for FreeFinder{
+    fn default() -> Self {
+        Self{
+            closest_grid: Vec::new()
+        }
+    }
+}
 /// ## Search order as follows:
 /// ___A9A___
 /// __87678__

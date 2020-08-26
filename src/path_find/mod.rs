@@ -1,5 +1,6 @@
 use pathfinding::prelude::{absdiff, astar, dijkstra_all, dijkstra_partial};
 use pyo3::prelude::*;
+use ndarray::{Array2, Axis};
 
 mod angles;
 pub mod pos;
@@ -9,8 +10,8 @@ mod search_grid;
 
 #[pyclass]
 pub struct PathFind {
-    pub map: Vec<Vec<usize>>,
-    original_map: Vec<Vec<usize>>,
+    pub map: Array2<usize>,
+    original_map: Array2<usize>,
     pub width: usize,
     pub height: usize,
     normal_influence: usize,
@@ -47,19 +48,33 @@ pub fn euclidean_distance(first: (f64, f64), other: (f64, f64)) -> f64 {
 impl PathFind {
     pub fn test_normalize_influence(&mut self, value: usize) -> usize {
         self.normalize_influence(value);
-        let mut sum: usize = 0;
-        for x in &self.map {
-            sum += x.iter().sum::<usize>();
-        }
-        sum
+        self.map.sum()
     }
 }
 
 impl PathFind {
+    pub fn new_from_array2(map: &Array2<usize>) -> Self{
+        let width = map.len_of(Axis(0));
+        let height = map.len_of(Axis(1));
+        let original_map = map.clone();
+        let normal_influence: usize = 1;
+        let auto_correct: bool = true;
+        let free_finder = search_grid::FreeFinder::new();
+
+        PathFind { map: map.clone(),
+                   original_map,
+                   width,
+                   height,
+                   normal_influence,
+                   auto_correct,
+                   free_finder }
+    }
     pub fn new_internal(map: Vec<Vec<usize>>) -> Self {
         let width = map.len();
-        let original_map = map.clone();
         let height = map[0].len();
+        let map= Array2::from_shape_vec((width, height), map.iter().flatten().cloned().collect()).expect("Could not create Array2 from Vec<Vec<usize>>");
+        let original_map = map.clone();
+        
         let normal_influence: usize = 1;
         let auto_correct: bool = true;
         let free_finder = search_grid::FreeFinder::new();
@@ -80,7 +95,7 @@ impl PathFind {
 
             for x in rect.x..rect.x_end {
                 for y in rect.y..rect.y_end {
-                    self.map[x][y] = self.normal_influence;
+                    self.map[(x,y)] = self.normal_influence;
                 }
             }
         }
@@ -94,32 +109,45 @@ impl PathFind {
 
             for x in rect.x..rect.x_end {
                 for y in rect.y..rect.y_end {
-                    self.map[x][y] = 0;
+                    self.map[(x,y)] = 0;
                 }
             }
         }
     }
 }
 
+impl Default for PathFind{
+    fn default() -> Self {
+        Self{
+            map: Default::default(),
+            original_map: Default::default(),
+            width: 0,
+            height: 0,
+            normal_influence: 0,
+            auto_correct: false,
+            free_finder: Default::default()
+        }
+    }
+}
 #[pymethods]
 impl PathFind {
-    #[new]
-    fn new(map: Vec<Vec<usize>>) -> Self {
-        let width = map.len();
-        let original_map = map.clone();
-        let height = map[0].len();
-        let normal_influence: usize = 1;
-        let auto_correct: bool = true;
-        let free_finder = search_grid::FreeFinder::new();
-
-        PathFind { map,
-                   original_map,
-                   width,
-                   height,
-                   normal_influence,
-                   auto_correct,
-                   free_finder }
-    }
+    // #[new]
+    // fn new(map: Vec<Vec<usize>>) -> Self {
+    //     let width = map.len();
+    //     let original_map = map.clone();
+    //     let height = map[0].len();
+    //     let normal_influence: usize = 1;
+    //     let auto_correct: bool = true;
+    //     let free_finder = search_grid::FreeFinder::new();
+    //
+    //     PathFind { map,
+    //                original_map,
+    //                width,
+    //                height,
+    //                normal_influence,
+    //                auto_correct,
+    //                free_finder }
+    // }
 
     // object.width
     #[getter(width)]
@@ -133,16 +161,16 @@ impl PathFind {
     #[getter(normal_influence)]
     fn get_normal_influence(&self) -> PyResult<usize> { Ok(self.normal_influence) }
 
-    // object.map
-    #[getter(map)]
-    fn get_map(&self) -> PyResult<Vec<Vec<usize>>> { Ok(self.map.clone()) }
+    // // object.map
+    // #[getter(map)]
+    // fn get_map(&self) -> PyResult<Vec<Vec<usize>>> { Ok(self.map.clone()) }
 
-    // object.map(2dArray)
-    #[setter(map)]
-    fn set_map(&mut self, value: Vec<Vec<usize>>) -> PyResult<()> {
-        self.map = value;
-        Ok(())
-    }
+    // // object.map(2dArray)
+    // #[setter(map)]
+    // fn set_map(&mut self, value: Vec<Vec<usize>>) -> PyResult<()> {
+    //     self.map = value;
+    //     Ok(())
+    // }
 
     // object.auto_correct
     #[getter(auto_correct)]
@@ -169,7 +197,7 @@ impl PathFind {
 
         for x in rect.x..rect.x_end {
             for y in rect.y..rect.y_end {
-                self.map[x][y] = 0;
+                self.map[(x,y)] = 0;
             }
         }
     }
@@ -182,7 +210,7 @@ impl PathFind {
 
             for x in rect.x..rect.x_end {
                 for y in rect.y..rect.y_end {
-                    self.map[x][y] = 0;
+                    self.map[(x,y)] = 0;
                 }
             }
         }
@@ -195,7 +223,7 @@ impl PathFind {
 
         for x in rect.x..rect.x_end {
             for y in rect.y..rect.y_end {
-                self.map[x][y] = self.normal_influence;
+                self.map[(x,y)] = self.normal_influence;
             }
         }
     }
@@ -203,11 +231,9 @@ impl PathFind {
     pub fn normalize_influence(&mut self, value: usize) {
         self.normal_influence = value;
 
-        for y in &mut self.map {
-            for x in y {
-                if *x > 0 {
-                    *x = value;
-                }
+        for y in self.map.iter_mut() {
+                if *y > 0 {
+                    *y = value;
             }
         }
     }
@@ -224,8 +250,8 @@ impl PathFind {
             for x in rect.x..rect.x_end {
                 for y in rect.y..rect.y_end {
                     let value = max * (1.0 - (octile_distance(position, (x, y)) as f64) * mult);
-                    if value > 0.0 && self.map[x][y] > 0 {
-                        self.map[x][y] += value as usize;
+                    if value > 0.0 && self.map[(x,y)] > 0 {
+                        self.map[(x,y)] += value as usize;
                     }
                 }
             }
@@ -248,7 +274,7 @@ impl PathFind {
             for x in rect.x..rect.x_end {
                 for y in rect.y..rect.y_end {
                     if (octile_distance(position, (x, y)) as f64) < mult_distance {
-                        self.map[x][y] += value;
+                        self.map[(x,y)] += value;
                     }
                 }
             }
@@ -263,12 +289,12 @@ impl PathFind {
         let max_int = max as usize;
 
         for position in &positions {
-            if self.map[position.0][position.1] == 0 {
+            if self.map[*position] == 0 {
                 continue;
             }
 
             let destinations = self.find_destinations_in_inline(*position, distance);
-            self.map[position.0][position.1] += max_int;
+            self.map[*position] += max_int;
 
             for destination in destinations {
                 let end_point = destination.0;
@@ -276,7 +302,7 @@ impl PathFind {
                 let value = max * (1.0 - current_distance * mult);
 
                 if current_distance < distance {
-                    self.map[end_point.0][end_point.1] += value as usize
+                    self.map[end_point] += value as usize
                 }
             }
         }
@@ -291,16 +317,16 @@ impl PathFind {
         for position in &positions {
             let corrected_position = self.get_closest_pathable(*position);
 
-            if self.map[corrected_position.0][corrected_position.1] == 0 {
+            if self.map[corrected_position] == 0 {
                 continue;
             }
 
             let destinations = self.find_destinations_in_inline(corrected_position, distance);
-            self.map[position.0][position.1] += max_int;
+            self.map[*position] += max_int;
 
             for destination in destinations {
                 let end_point = destination.0;
-                self.map[end_point.0][end_point.1] += max_int
+                self.map[end_point] += max_int
             }
         }
     }
@@ -322,7 +348,7 @@ impl PathFind {
 
         for destination in destinations {
             let pos = destination.0;
-            let new_val = self.map[pos.0][pos.1];
+            let new_val = self.map[pos];
             if new_val == 0 {
                 continue;
             }
@@ -355,7 +381,7 @@ impl PathFind {
 
         for x in rect.x..rect.x_end {
             for y in rect.y..rect.y_end {
-                let new_val = self.map[x][y];
+                let new_val = self.map[(x,y)];
                 if new_val == 0 {
                     continue;
                 }
@@ -384,7 +410,7 @@ impl PathFind {
 
         let start: pos::Pos = pos::Pos(corrected_start.0, corrected_start.1);
         let goal: pos::Pos = pos::Pos(corrected_end.0, corrected_end.1);
-        let grid: &Vec<Vec<usize>> = &self.map;
+        let grid = &self.map;
 
         let result: Option<(Vec<pos::Pos>, usize)>;
         match possible_heuristic.unwrap_or(0) {
@@ -424,7 +450,7 @@ impl PathFind {
 
         let start: pos_large::PosLarge = pos_large::PosLarge(corrected_start.0, corrected_start.1);
         let goal: pos_large::PosLarge = pos_large::PosLarge(corrected_end.0, corrected_end.1);
-        let grid: &Vec<Vec<usize>> = &self.map;
+        let grid = &self.map;
 
         let result: Option<(Vec<pos_large::PosLarge>, usize)>;
         match possible_heuristic.unwrap_or(0) {
@@ -473,7 +499,7 @@ impl PathFind {
                                   -> (Vec<(usize, usize)>, f64) {
         let start = pos::InfluencedPos(corrected_start.0, corrected_start.1);
         let goal = pos::InfluencedPos(corrected_end.0, corrected_end.1);
-        let grid: &Vec<Vec<usize>> = &self.map;
+        let grid = &self.map;
         let infl = self.normal_influence;
 
         let result: Option<(Vec<pos::InfluencedPos>, usize)>;
@@ -515,7 +541,7 @@ impl PathFind {
 
         let start = pos_large::InfluencedPosLarge(corrected_start.0, corrected_start.1);
         let goal = pos_large::InfluencedPosLarge(corrected_end.0, corrected_end.1);
-        let grid: &Vec<Vec<usize>> = &self.map;
+        let grid = &self.map;
         let infl = self.normal_influence;
 
         let result: Option<(Vec<pos_large::InfluencedPosLarge>, usize)>;
@@ -549,7 +575,7 @@ impl PathFind {
     /// Finds all reachable destinations from selected start point. Ignores influence.
     fn find_all_destinations(&self, start: (usize, usize)) -> PyResult<Vec<((usize, usize), f64)>> {
         let start: pos::Pos = pos::Pos(start.0, start.1);
-        let grid: &Vec<Vec<usize>> = &self.map;
+        let grid= &self.map;
         let result = dijkstra_all(&start, |p| p.successors(&grid));
 
         let mut destination_collection: Vec<((usize, usize), f64)> =
@@ -573,7 +599,7 @@ impl PathFind {
     #[inline]
     pub fn find_destinations_in_inline(&self, start: (usize, usize), distance: f64) -> Vec<((usize, usize), f64)> {
         let start: pos::Pos = pos::Pos(start.0, start.1);
-        let grid: &Vec<Vec<usize>> = &self.map;
+        let grid = &self.map;
         let u_distance = (distance * pos::MULTF64) as usize;
 
         let result = dijkstra_partial(&start, |p| p.successors(&grid), |p| p.octile_distance(&start) > u_distance);
@@ -598,7 +624,7 @@ impl PathFind {
                                              distance: f64)
                                              -> Vec<((usize, usize), f64)> {
         let start: pos::InfluencedPos = pos::InfluencedPos(start.0, start.1);
-        let grid: &Vec<Vec<usize>> = &self.map;
+        let grid = &self.map;
         let u_distance = (distance * (self.normal_influence as f64) * pos::MULTF64) as usize;
 
         let result = dijkstra_partial(&start,
@@ -621,7 +647,7 @@ impl PathFind {
 
     #[inline]
     fn get_closest_pathable(&self, start: (usize, usize)) -> (usize, usize) {
-        if self.auto_correct || self.map[start.0][start.1] > 0 {
+        if self.auto_correct || self.map[start] > 0 {
             start
         } else {
             self.free_finder.find_free(start, &self.map, self.width, self.height)
@@ -648,7 +674,7 @@ impl PathFind {
 
         for x in rect.x..rect.x_end {
             for y in rect.y..rect.y_end {
-                let new_val = self.map[x][y];
+                let new_val = self.map[(x,y)];
                 if new_val > 0 {
                     destinations.push(((x, y), new_val));
                 }
@@ -675,7 +701,7 @@ impl PathFind {
             //let best_path = self.find_path_influence_inline(corrected_start, best_target.0, Some(1u8));
 
             if current_distance < distance + 4.0 {
-                let best_influence = self.map[(best_target.0).0 as usize][(best_target.0).1 as usize];
+                let best_influence = self.map[((best_target.0).0 as usize,(best_target.0).1 as usize)];
                 //let mut best_distance_from_target = octile_distance_f64(best_target.0, target_int);
                 let destinations_from_start = self.find_destinations_in_inline(corrected_start, 5.0);
                 let mut angle_distance =
@@ -685,7 +711,7 @@ impl PathFind {
                 for destination in destinations_from_start {
                     let point = destination.0;
                     let point_f64 = (point.0 as f64 + 0.5, point.1 as f64 + 0.5);
-                    let influence = self.map[point.0][point.1];
+                    let influence = self.map[point];
                     //let distance_from_target = euclidean_distance(point_f64, target);
                     angle_distance = angles::angle_distance(angle, angles::angle_between_f64(point_f64, target));
                     let score = influence as f64 * (1.0 + angle_distance * 0.25);
@@ -704,7 +730,7 @@ impl PathFind {
     pub fn invert_djiktra(&self, start: (f64, f64), distance: f64) -> Vec<((usize, usize), f64)> {
         let start_int = (start.0 as usize, start.1 as usize);
         let start: pos::InvertPos = pos::InvertPos(start_int.0, start_int.1);
-        let grid: &Vec<Vec<usize>> = &self.map;
+        let grid = &self.map;
         let u_distance = (distance * pos::MULTF64) as usize;
 
         let result = dijkstra_partial(&start, |p| p.successors(&grid), |p| p.octile_distance(&start) > u_distance);
@@ -726,7 +752,7 @@ impl PathFind {
     pub fn djiktra(&self, start: (f64, f64), distance: f64) -> Vec<((usize, usize), f64)> {
         let start_int = (start.0 as usize, start.1 as usize);
         let start: pos::Pos = pos::Pos(start_int.0, start_int.1);
-        let grid: &Vec<Vec<usize>> = &self.map;
+        let grid = &self.map;
         let u_distance = (distance * pos::MULTF64) as usize;
 
         let result = dijkstra_partial(&start, |p| p.successors(&grid), |p| p.octile_distance(&start) > u_distance);

@@ -9,6 +9,7 @@ use crate::mapping::chokes::solve_chokes;
 use crate::mapping::climb::modify_climb;
 use crate::mapping::map_point;
 use crate::mapping::map_point::Cliff;
+use ndarray::Axis;
 
 const DIFFERENCE: usize = 16;
 const Y_MULT: usize = 1000000;
@@ -43,17 +44,17 @@ impl Map {
         Map::new(pathing, placement, height_map, x_start, y_start, x_end, y_end)
     }
 
-    #[getter(ground_pathing)]
-    fn get_ground_pathing(&self) -> Vec<Vec<usize>> { self.ground_pathing.map.clone() }
+    // #[getter(ground_pathing)]
+    // fn get_ground_pathing(&self) -> Vec<Vec<usize>> { self.ground_pathing.map.clone() }
 
-    #[getter(air_pathing)]
-    fn get_air_pathing(&self) -> Vec<Vec<usize>> { self.air_pathing.map.clone() }
+    // #[getter(air_pathing)]
+    // fn get_air_pathing(&self) -> Vec<Vec<usize>> { self.air_pathing.map.clone() }
 
-    #[getter(reaper_pathing)]
-    fn get_reaper_pathing(&self) -> Vec<Vec<usize>> { self.reaper_pathing.map.clone() }
+    // #[getter(reaper_pathing)]
+    // fn get_reaper_pathing(&self) -> Vec<Vec<usize>> { self.reaper_pathing.map.clone() }
 
-    #[getter(colossus_pathing)]
-    fn get_colossus_pathing(&self) -> Vec<Vec<usize>> { self.colossus_pathing.map.clone() }
+    // #[getter(colossus_pathing)]
+    // fn get_colossus_pathing(&self) -> Vec<Vec<usize>> { self.colossus_pathing.map.clone() }
 
     #[getter(overlord_spots)]
     fn get_overlord_spots(&self) -> Vec<(f64, f64)> { self.overlord_spots.clone() }
@@ -62,14 +63,14 @@ impl Map {
     pub fn get_chokes(&self) -> Vec<Choke> { self.chokes.clone() }
 
     fn draw_climbs(&self) -> Vec<Vec<usize>> {
-        let width = self.ground_pathing.map.len();
-        let height = self.ground_pathing.map[0].len();
+        let width = self.ground_pathing.map.len_of(Axis(0));
+        let height = self.ground_pathing.map.len_of(Axis(1));
         let mut walk_map = vec![vec![0; height]; width];
         let path = &self.ground_pathing.map;
 
         for x in 0..width {
             for y in 0..height {
-                if path[x][y] > 0 {
+                if path[(x,y)] > 0 {
                     if self.points[x][y].cliff_type == Cliff::High {
                         walk_map[x][y] = 5;
                     } else if self.points[x][y].cliff_type == Cliff::Both {
@@ -91,8 +92,8 @@ impl Map {
     }
 
     fn draw_chokes(&self) -> Vec<Vec<usize>> {
-        let width = self.ground_pathing.map.len();
-        let height = self.ground_pathing.map[0].len();
+        let width = self.ground_pathing.map.len_of(Axis(0));
+        let height = self.ground_pathing.map.len_of(Axis(1));
         let mut walk_map = vec![vec![0; height]; width];
 
         for x in 0..width {

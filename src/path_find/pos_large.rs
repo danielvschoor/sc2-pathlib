@@ -1,4 +1,5 @@
 use pathfinding::prelude::absdiff;
+use ndarray::{Array2, Axis};
 
 //static SQRT2: f32 = 1.4142135623730950488016887242097;
 pub static SQRT2: usize = 14142;
@@ -39,7 +40,7 @@ impl PosLarge {
         }
     }
 
-    pub fn successors(&self, grid: &[Vec<usize>]) -> Vec<(PosLarge, usize)> {
+    pub fn successors(&self, grid: &Array2<usize>) -> Vec<(PosLarge, usize)> {
         let &PosLarge(x, y) = self;
         let mut arr = Vec::<(PosLarge, usize)>::with_capacity(8);
         //let arr = Vec<(PosLarge, f32)>();
@@ -55,30 +56,30 @@ impl PosLarge {
         let mut val_right_down: bool = false;
 
         if x > 0 {
-            val_left = grid[x - 1][y] > 0;
+            val_left = grid[(x - 1,y)] > 0;
         }
 
         if y > 0 {
-            val_down = grid[x][y - 1] > 0;
+            val_down = grid[(x,y - 1)] > 0;
         }
 
-        if x + 1 < grid.len() {
-            val_right = grid[x + 1][y] > 0;
+        if x + 1 < grid.len_of(Axis(0)) {
+            val_right = grid[(x + 1,y)] > 0;
         }
 
-        if y + 1 < grid[0].len() {
-            val_up = grid[x][y + 1] > 0;
+        if y + 1 < grid.len_of(Axis(1)) {
+            val_up = grid[(x,y + 1)] > 0;
         }
 
         if val_left {
             arr.push((PosLarge(x - 1, y), MULT));
 
             if val_down {
-                val_left_down = grid[x - 1][y - 1] > 0;
+                val_left_down = grid[(x - 1,y - 1)] > 0;
             }
 
             if val_up {
-                val_left_up = grid[x - 1][y + 1] > 0;
+                val_left_up = grid[(x - 1,y + 1)] > 0;
             }
         }
 
@@ -86,11 +87,11 @@ impl PosLarge {
             arr.push((PosLarge(x + 1, y), MULT));
 
             if val_down {
-                val_right_down = grid[x + 1][y - 1] > 0;
+                val_right_down = grid[(x + 1,y - 1)] > 0;
             }
 
             if val_up {
-                val_right_up = grid[x + 1][y + 1] > 0;
+                val_right_up = grid[(x + 1,y + 1)] > 0;
             }
         }
 
@@ -159,7 +160,7 @@ impl InfluencedPosLarge {
         }
     }
 
-    pub fn successors(&self, grid: &[Vec<usize>]) -> Vec<(InfluencedPosLarge, usize)> {
+    pub fn successors(&self, grid: &Array2<usize>) -> Vec<(InfluencedPosLarge, usize)> {
         let &InfluencedPosLarge(x, y) = self;
         let mut arr = Vec::<(InfluencedPosLarge, usize)>::with_capacity(8);
 
@@ -174,38 +175,38 @@ impl InfluencedPosLarge {
         let mut val_right_down: usize = 0;
 
         if x > 0 {
-            val_left = grid[x - 1][y];
+            val_left = grid[(x - 1,y)];
         }
 
         if y > 0 {
-            val_down = grid[x][y - 1];
+            val_down = grid[(x,y - 1)];
         }
 
-        if x + 1 < grid.len() {
-            val_right = grid[x + 1][y];
+        if x + 1 < grid.len_of(Axis(0)) {
+            val_right = grid[(x + 1,y)];
         }
 
-        if y + 1 < grid[0].len() {
-            val_up = grid[x][y + 1];
+        if y + 1 < grid.len_of(Axis(1)) {
+            val_up = grid[(x,y + 1)];
         }
 
         if val_left > 0 {
             if val_down > 0 {
-                val_left_down = grid[x - 1][y - 1];
+                val_left_down = grid[(x - 1,y - 1)];
             }
 
             if val_up > 0 {
-                val_left_up = grid[x - 1][y + 1];
+                val_left_up = grid[(x - 1,y + 1)];
             }
         }
 
         if val_right > 0 {
             if val_down > 0 {
-                val_right_down = grid[x + 1][y - 1];
+                val_right_down = grid[(x + 1,y - 1)];
             }
 
             if val_up > 0 {
-                val_right_up = grid[x + 1][y + 1];
+                val_right_up = grid[(x + 1,y + 1)];
             }
         }
 

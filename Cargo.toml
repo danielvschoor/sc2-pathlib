@@ -13,6 +13,7 @@ features = ["extension-module"]
 
 [dependencies]
 pathfinding = "2.0.4"
+ndarray ="*"
 
 [dev-dependencies]
 criterion = "0.3"
@@ -21,9 +22,9 @@ criterion = "0.3"
 [[bench]]
 name = "path_benchmark"
 harness = false
-# [profile.release]
-# opt-level = 3
-# debug=false
-# panic="abort"
-# lto = "fat"
-# codegen-units = 1
+[profile.release]
+opt-level = 3
+debug=true
+panic="abort"
+lto = "fat"
+codegen-units = 1

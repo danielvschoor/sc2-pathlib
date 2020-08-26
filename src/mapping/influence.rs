@@ -33,12 +33,12 @@ impl Map {
 
         for position_f in &positions {
             let position = (position_f.0.round() as usize, position_f.1.round() as usize);
-            if maps[0].map[position.0][position.1] == 0 {
+            if maps[0].map[position] == 0 {
                 continue;
             }
 
             let destinations = maps[0].find_destinations_in_inline(position, distance);
-            maps[0].map[position.0][position.1] += max_int;
+            maps[0].map[position] += max_int;
 
             for destination in destinations {
                 let end_point = destination.0;
@@ -47,7 +47,7 @@ impl Map {
 
                 if current_distance < distance {
                     for mapping in maps.iter_mut() {
-                        mapping.map[end_point.0][end_point.1] += value as usize
+                        mapping.map[end_point] += value as usize
                     }
                 }
             }
@@ -73,9 +73,9 @@ impl Map {
                     let d = octile_distance(position, (x, y)) as f64;
                     if d < mult_max && d > mult_min {
                         for mapping in maps.iter_mut() {
-                            let old_val = mapping.map[x][y];
+                            let old_val = mapping.map[(x,y)];
                             if old_val > 0 {
-                                mapping.map[x][y] = old_val + value;
+                                mapping.map[(x,y)] = old_val + value;
                             }
                         }
                     }
@@ -120,18 +120,18 @@ impl Map {
                     if d < mult_max {
                         if d < mult_min {
                             for mapping in maps.iter_mut() {
-                                let old_val = mapping.map[x][y];
+                                let old_val = mapping.map[(x,y)];
                                 if old_val > 0 {
-                                    mapping.map[x][y] = old_val + value;
+                                    mapping.map[(x,y)] = old_val + value;
                                 }
                             }
                         } else {
                             // Fading threshold
                             let value_fading = (influence * (1.0 - (d * mult - min) * mult2)) as usize;
                             for mapping in maps.iter_mut() {
-                                let old_val = mapping.map[x][y];
+                                let old_val = mapping.map[(x,y)];
                                 if old_val > 0 && value_fading > 0{
-                                    mapping.map[x][y] = old_val + value_fading;
+                                    mapping.map[(x,y)] = old_val + value_fading;
                                 }
                             }
                         }
