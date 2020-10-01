@@ -450,3 +450,21 @@ fn flood_fill_overlord(points: &mut Vec<Vec<map_point::MapPoint>>,
 
     return result;
 }
+
+
+impl Default for Map{
+    fn default() -> Self {
+        Self{
+            ground_pathing: PathFind::default(),
+            air_pathing: PathFind::default(),
+            colossus_pathing: PathFind::default(),
+            reaper_pathing: PathFind::default(),
+            points: Vec::new(),
+            overlord_spots: Vec::new(),
+            influence_colossus_map: false,
+            influence_reaper_map: false,
+            chokes: Vec::new(),
+            
+        }
+    }
+}
