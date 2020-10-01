@@ -57,12 +57,12 @@ impl Map {
     // fn get_colossus_pathing(&self) -> Vec<Vec<usize>> { self.colossus_pathing.map.clone() }
 
     #[getter(overlord_spots)]
-    fn get_overlord_spots(&self) -> Vec<(f64, f64)> { self.overlord_spots.clone() }
+    pub fn get_overlord_spots(&self) -> Vec<(f64, f64)> { self.overlord_spots.clone() }
 
     #[getter(chokes)]
     pub fn get_chokes(&self) -> Vec<Choke> { self.chokes.clone() }
 
-    fn draw_climbs(&self) -> Vec<Vec<usize>> {
+    pub fn draw_climbs(&self) -> Vec<Vec<usize>> {
         let width = self.ground_pathing.map.len_of(Axis(0));
         let height = self.ground_pathing.map.len_of(Axis(1));
         let mut walk_map = vec![vec![0; height]; width];
@@ -91,7 +91,7 @@ impl Map {
         walk_map
     }
 
-    fn draw_chokes(&self) -> Vec<Vec<usize>> {
+    pub fn draw_chokes(&self) -> Vec<Vec<usize>> {
         let width = self.ground_pathing.map.len_of(Axis(0));
         let height = self.ground_pathing.map.len_of(Axis(1));
         let mut walk_map = vec![vec![0; height]; width];
@@ -390,7 +390,7 @@ impl Map {
               chokes }
     }
 
-    fn get_map(&self, map_type: u8) -> &PathFind {
+    pub fn get_map(&self, map_type: u8) -> &PathFind {
         if map_type == 0 {
             return &self.ground_pathing;
         }
@@ -408,7 +408,7 @@ impl Map {
     }
 }
 
-fn flood_fill_overlord(points: &mut Vec<Vec<map_point::MapPoint>>,
+pub fn flood_fill_overlord(points: &mut Vec<Vec<map_point::MapPoint>>,
                        x: usize,
                        y: usize,
                        target_height: usize,
@@ -449,4 +449,21 @@ fn flood_fill_overlord(points: &mut Vec<Vec<map_point::MapPoint>>,
     // }
 
     return result;
+}
+
+impl Default for Map{
+    fn default() -> Self {
+        Self{
+            ground_pathing: PathFind::default(),
+            air_pathing: PathFind::default(),
+            colossus_pathing: PathFind::default(),
+            reaper_pathing: PathFind::default(),
+            points: Vec::new(),
+            overlord_spots: Vec::new(),
+            influence_colossus_map: false,
+            influence_reaper_map: false,
+            chokes: Vec::new(),
+            
+        }
+    }
 }

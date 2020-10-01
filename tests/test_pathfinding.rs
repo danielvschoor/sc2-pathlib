@@ -26,3 +26,9 @@ fn test_find_path_10x10() {
     let (_, distance) = r;
     assert_eq!(distance, 12.3136);
 }
+#[test]
+fn test_normalization(){
+    let mut path_find = get_pathfind("tests/empty10x10.txt");
+    path_find.normalize_influence(30);
+    assert_eq!(path_find.map.sum(), 320320)
+}

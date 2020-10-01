@@ -231,15 +231,16 @@ impl PathFind {
     pub fn normalize_influence(&mut self, value: usize) {
         self.normal_influence = value;
 
-        for y in self.map.iter_mut() {
-                if *y > 0 {
-                    *y = value;
-            }
-        }
+        self.map.map_inplace(|x| if *x > 0 {*x = value} else{} );
+        // {
+        //         if *y > 0 {
+        //             *y = value;
+        //     }
+        // }
     }
 
     /// Adds influence based on euclidean distance
-    fn add_influence(&mut self, positions: Vec<(usize, usize)>, max: f64, distance: f64) -> PyResult<()> {
+    pub fn add_influence(&mut self, positions: Vec<(usize, usize)>, max: f64, distance: f64) -> PyResult<()> {
         let mult = 1.0 / (distance * pos::MULTF64);
         let diameter = ((distance * 2f64) as usize) + 2;
         let rect_size = (diameter, diameter);
@@ -261,7 +262,7 @@ impl PathFind {
     }
 
     /// Adds influence based on euclidean distance
-    fn add_influence_flat(&mut self, positions: Vec<(usize, usize)>, max: f64, distance: f64) -> PyResult<()> {
+    pub fn add_influence_flat(&mut self, positions: Vec<(usize, usize)>, max: f64, distance: f64) -> PyResult<()> {
         let value = max as usize;
         let mult_distance = distance * pos::MULTF64;
 
